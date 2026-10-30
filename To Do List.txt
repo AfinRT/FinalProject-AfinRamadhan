@@ -1,0 +1,7 @@
+Merancang ERD dan database yang terstruktur.✅️
+Membangun backend dan API dengan authentication serta role-based authorization.
+Mengimplementasikan fitur CRUD dengan validasi dan error handling.
+Mengintegrasikan API dengan front-end berbasis React.
+Membangun admin panel dengan akses berbasis role.
+Melakukan deployment aplikasi dan dokumentasi proyek.
+Menyajikan hasil proyek dalam bentuk presentasi.

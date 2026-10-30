@@ -1,0 +1,16 @@
+{
+  "development": {
+    "username": "root",
+    "password": null,
+    "database": "apotek_pos",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "test": {
+    "username": "root",
+    "password": null,
+    "database": "apotek_pos_test",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  }
+}

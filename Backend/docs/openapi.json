@@ -1,0 +1,1183 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Final Project API",
+    "version": "1.0.0",
+    "description": "API aplikasi manajemen apotek. Login untuk memperoleh JWT, lalu gunakan Authorize. Hak akses tiap endpoint mengikuti role pengguna yang dijelaskan pada operasi."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:3000",
+      "description": "Backend lokal"
+    }
+  ],
+  "tags": [
+    { "name": "System" },
+    { "name": "Auth" },
+    { "name": "Dashboard" },
+    { "name": "Products" },
+    { "name": "Product Batches" },
+    { "name": "Categories" },
+    { "name": "Expenses" },
+    { "name": "Sales" },
+    { "name": "Suppliers" },
+    { "name": "Users" }
+  ],
+  "security": [{ "bearerAuth": [] }],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "health",
+        "summary": "Periksa status server dan database",
+        "description": "Mengembalikan 503 jika koneksi database tidak tersedia.",
+        "tags": ["System"],
+        "security": [],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "503": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "login",
+        "summary": "Login dan dapatkan token JWT",
+        "tags": ["Auth"],
+        "security": [],
+        "requestBody": { "$ref": "#/components/requestBodies/Login" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" },
+          "403": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/dashboard/summary": {
+      "get": {
+        "operationId": "dashboardSummary",
+        "summary": "Ringkasan statistik penjualan",
+        "description": "Akses untuk admin, apoteker, dan kasir. Admin dan apoteker dapat memilih periode dengan mengirim date_from dan date_to bersama; default-nya awal bulan sampai hari ini. Kasir hanya dapat melihat ringkasan hari ini dan tidak dapat mengirim filter tanggal.",
+        "tags": ["Dashboard"],
+        "parameters": [
+          { "$ref": "#/components/parameters/DateFrom" },
+          { "$ref": "#/components/parameters/DateTo" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" },
+          "403": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/dashboard/yearly": {
+      "get": {
+        "operationId": "dashboardYearly",
+        "summary": "Data statistik tahunan",
+        "description": "Semua role aktif dapat mengakses. Admin dan apoteker melihat data tahunan seluruh pengguna; kasir hanya melihat penjualan dan pengeluaran miliknya pada hari ini. Parameter year untuk kasir, jika diberikan, harus tahun berjalan.",
+        "tags": ["Dashboard"],
+        "parameters": [
+          { "$ref": "#/components/parameters/Year" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" },
+          "403": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/products": {
+      "get": {
+        "operationId": "listProducts",
+        "summary": "Daftar produk",
+        "description": "Akses untuk admin, apoteker, dan kasir.",
+        "tags": ["Products"],
+        "parameters": [
+          { "$ref": "#/components/parameters/Search" },
+          { "$ref": "#/components/parameters/Barcode" },
+          { "$ref": "#/components/parameters/CategoryId" },
+          { "$ref": "#/components/parameters/SupplierId" },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/PageSize" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Success" } }
+      },
+      "post": {
+        "operationId": "createProduct",
+        "summary": "Tambah produk",
+        "description": "Akses untuk admin dan apoteker.",
+        "tags": ["Products"],
+        "requestBody": { "$ref": "#/components/requestBodies/Product" },
+        "responses": {
+          "201": {
+            "description": "Produk berhasil dibuat. data.batch_id berisi ID batch awal jika stok awal lebih dari 0; nilainya null jika tidak ada batch yang dibuat.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Success" },
+                "example": {
+                  "success": true,
+                  "message": "Produk berhasil dibuat.",
+                  "data": {
+                    "id": 12,
+                    "batch_id": 45,
+                    "name": "Produk Uji Postman",
+                    "stock": 10
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/products/expiring": {
+      "get": {
+        "operationId": "listExpiringProducts",
+        "summary": "Daftar produk mendekati kedaluwarsa",
+        "description": "Akses untuk admin dan apoteker.",
+        "tags": ["Products"],
+        "parameters": [
+          { "$ref": "#/components/parameters/Search" },
+          { "$ref": "#/components/parameters/SupplierId" },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/PageSize" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Success" } }
+      }
+    },
+    "/api/products/low-stock": {
+      "get": {
+        "operationId": "listLowStockProducts",
+        "summary": "Daftar produk dengan stok rendah",
+        "description": "Akses untuk admin dan apoteker.",
+        "tags": ["Products"],
+        "parameters": [
+          { "$ref": "#/components/parameters/Search" },
+          { "$ref": "#/components/parameters/SupplierId" },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/PageSize" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Success" } }
+      }
+    },
+    "/api/products/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "put": {
+        "operationId": "updateProduct",
+        "summary": "Perbarui produk",
+        "description": "Akses untuk admin dan apoteker.",
+        "tags": ["Products"],
+        "requestBody": { "$ref": "#/components/requestBodies/Product" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "400": { "$ref": "#/components/responses/Error" },
+          "404": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/products/{id}/stock-in": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "post": {
+        "operationId": "stockInProduct",
+        "summary": "Tambah stok produk",
+        "description": "Akses untuk admin dan apoteker.",
+        "tags": ["Products"],
+        "requestBody": { "$ref": "#/components/requestBodies/StockIn" },
+        "responses": {
+          "201": {
+            "description": "Stok berhasil ditambahkan. data.batch_id adalah ID batch baru.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Success" },
+                "example": {
+                  "success": true,
+                  "message": "Stok produk berhasil ditambahkan.",
+                  "data": {
+                    "id": 12,
+                    "batch_id": 46,
+                    "name": "Produk Uji Postman",
+                    "stock": 110
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "404": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/product-batches/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "get": {
+        "operationId": "listProductBatches",
+        "summary": "Daftar batch berdasarkan produk",
+        "description": "Akses untuk admin dan apoteker. ID pada path adalah product_id.",
+        "tags": ["Product Batches"],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "400": { "$ref": "#/components/responses/Error" }
+        }
+      },
+      "put": {
+        "operationId": "updateProductBatch",
+        "summary": "Perbarui batch produk",
+        "description": "Akses untuk admin dan apoteker.",
+        "tags": ["Product Batches"],
+        "requestBody": { "$ref": "#/components/requestBodies/ProductBatch" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "400": { "$ref": "#/components/responses/Error" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteProductBatch",
+        "summary": "Hapus batch produk",
+        "description": "Akses untuk admin dan apoteker.",
+        "tags": ["Product Batches"],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "404": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/categories": {
+      "get": {
+        "operationId": "listCategories",
+        "summary": "Daftar kategori",
+        "description": "Akses untuk admin dan apoteker.",
+        "tags": ["Categories"],
+        "parameters": [
+          { "$ref": "#/components/parameters/Search" },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/PageSize" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Success" } }
+      },
+      "post": {
+        "operationId": "createCategory",
+        "summary": "Tambah kategori",
+        "description": "Akses untuk admin dan apoteker.",
+        "tags": ["Categories"],
+        "requestBody": { "$ref": "#/components/requestBodies/Category" },
+        "responses": {
+          "201": { "$ref": "#/components/responses/Success" },
+          "400": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/categories/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "put": {
+        "operationId": "updateCategory",
+        "summary": "Perbarui kategori",
+        "description": "Akses untuk admin dan apoteker.",
+        "tags": ["Categories"],
+        "requestBody": { "$ref": "#/components/requestBodies/Category" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "400": { "$ref": "#/components/responses/Error" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteCategory",
+        "summary": "Hapus kategori",
+        "description": "Akses untuk admin dan apoteker.",
+        "tags": ["Categories"],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "404": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/expenses": {
+      "get": {
+        "operationId": "listExpenses",
+        "summary": "Daftar pengeluaran",
+        "description": "Akses untuk admin dan kasir. Filter tanggal hanya diterapkan untuk admin; kasir hanya melihat pengeluaran miliknya.",
+        "tags": ["Expenses"],
+        "parameters": [
+          { "$ref": "#/components/parameters/Search" },
+          { "$ref": "#/components/parameters/DateFrom" },
+          { "$ref": "#/components/parameters/DateTo" },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/PageSize" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Success" } }
+      },
+      "post": {
+        "operationId": "createExpense",
+        "summary": "Tambah pengeluaran",
+        "description": "Akses untuk admin dan kasir.",
+        "tags": ["Expenses"],
+        "requestBody": { "$ref": "#/components/requestBodies/Expense" },
+        "responses": {
+          "201": { "$ref": "#/components/responses/Success" },
+          "400": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/expenses/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "put": {
+        "operationId": "updateExpense",
+        "summary": "Perbarui pengeluaran",
+        "description": "Akses untuk admin dan kasir; otorisasi kepemilikan mengikuti backend.",
+        "tags": ["Expenses"],
+        "requestBody": { "$ref": "#/components/requestBodies/Expense" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "400": { "$ref": "#/components/responses/Error" },
+          "404": { "$ref": "#/components/responses/Error" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteExpense",
+        "summary": "Hapus pengeluaran",
+        "description": "Akses untuk admin dan kasir; otorisasi kepemilikan mengikuti backend.",
+        "tags": ["Expenses"],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "404": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/sales": {
+      "get": {
+        "operationId": "listSales",
+        "summary": "Daftar penjualan",
+        "description": "Akses untuk admin, apoteker, dan kasir. Kasir hanya melihat transaksi miliknya hari ini; filter tanggal dan nama kasir hanya berlaku untuk admin dan apoteker.",
+        "tags": ["Sales"],
+        "parameters": [
+          { "$ref": "#/components/parameters/Invoice" },
+          { "$ref": "#/components/parameters/ProductSearch" },
+          { "$ref": "#/components/parameters/Cashier" },
+          { "$ref": "#/components/parameters/DateFrom" },
+          { "$ref": "#/components/parameters/DateTo" },
+          { "$ref": "#/components/parameters/PaymentMethod" },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/PageSize" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Success" } }
+      },
+      "post": {
+        "operationId": "createSale",
+        "summary": "Buat transaksi penjualan",
+        "description": "Akses hanya untuk kasir.",
+        "tags": ["Sales"],
+        "requestBody": { "$ref": "#/components/requestBodies/Sale" },
+        "responses": {
+          "201": {
+            "description": "Penjualan berhasil disimpan beserta detail transaksi dan item.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SaleCreatedResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/sales/product-analysis": {
+      "get": {
+        "operationId": "salesProductAnalysis",
+        "summary": "Analisis penjualan produk",
+        "description": "Akses untuk admin dan apoteker. date_from dan date_to harus dikirim bersama.",
+        "tags": ["Sales"],
+        "parameters": [
+          { "$ref": "#/components/parameters/DateFrom" },
+          { "$ref": "#/components/parameters/DateTo" },
+          { "$ref": "#/components/parameters/Search" },
+          { "$ref": "#/components/parameters/Order" },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/PageSize" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Success" } }
+      }
+    },
+    "/api/sales/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "get": {
+        "operationId": "getSale",
+        "summary": "Detail penjualan",
+        "description": "Akses untuk admin, apoteker, dan kasir.",
+        "tags": ["Sales"],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "404": { "$ref": "#/components/responses/Error" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteSale",
+        "summary": "Hapus penjualan",
+        "description": "Akses hanya untuk admin.",
+        "tags": ["Sales"],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "404": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/sales/{id}/receipt": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "get": {
+        "operationId": "getSaleReceipt",
+        "summary": "Ambil struk penjualan",
+        "description": "Akses untuk admin, apoteker, dan kasir.",
+        "tags": ["Sales"],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "404": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/suppliers": {
+      "get": {
+        "operationId": "listSuppliers",
+        "summary": "Daftar supplier",
+        "description": "Akses untuk admin dan apoteker.",
+        "tags": ["Suppliers"],
+        "parameters": [
+          { "$ref": "#/components/parameters/Search" },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/PageSize" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Success" } }
+      },
+      "post": {
+        "operationId": "createSupplier",
+        "summary": "Tambah supplier",
+        "description": "Akses untuk admin dan apoteker.",
+        "tags": ["Suppliers"],
+        "requestBody": { "$ref": "#/components/requestBodies/Supplier" },
+        "responses": {
+          "201": { "$ref": "#/components/responses/Success" },
+          "400": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/suppliers/purchases": {
+      "get": {
+        "operationId": "listSupplierPurchases",
+        "summary": "Riwayat pembelian supplier",
+        "description": "Akses untuk admin dan apoteker.",
+        "tags": ["Suppliers"],
+        "parameters": [
+          { "$ref": "#/components/parameters/SupplierId" },
+          { "$ref": "#/components/parameters/ProductSearch" },
+          { "$ref": "#/components/parameters/InvoiceDate" },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/PageSize" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Success" } }
+      }
+    },
+    "/api/suppliers/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "put": {
+        "operationId": "updateSupplier",
+        "summary": "Perbarui supplier",
+        "description": "Akses untuk admin dan apoteker.",
+        "tags": ["Suppliers"],
+        "requestBody": { "$ref": "#/components/requestBodies/Supplier" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "400": { "$ref": "#/components/responses/Error" },
+          "404": { "$ref": "#/components/responses/Error" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteSupplier",
+        "summary": "Hapus supplier",
+        "description": "Akses untuk admin dan apoteker.",
+        "tags": ["Suppliers"],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "404": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/suppliers/{id}/purchases/{invoiceNumber}": {
+      "parameters": [
+        { "$ref": "#/components/parameters/Id" },
+        {
+          "name": "invoiceNumber",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "string" }
+        }
+      ],
+      "get": {
+        "operationId": "getSupplierPurchaseDetails",
+        "summary": "Detail faktur pembelian supplier",
+        "description": "Akses untuk admin dan apoteker.",
+        "tags": ["Suppliers"],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "404": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "operationId": "listUsers",
+        "summary": "Daftar pengguna",
+        "description": "Akses hanya untuk admin.",
+        "tags": ["Users"],
+        "parameters": [
+          { "$ref": "#/components/parameters/Search" },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/PageSize" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Success" } }
+      },
+      "post": {
+        "operationId": "createUser",
+        "summary": "Tambah pengguna",
+        "description": "Akses hanya untuk admin.",
+        "tags": ["Users"],
+        "requestBody": { "$ref": "#/components/requestBodies/User" },
+        "responses": {
+          "201": { "$ref": "#/components/responses/Success" },
+          "400": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/users/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/Id" }],
+      "put": {
+        "operationId": "updateUser",
+        "summary": "Perbarui pengguna",
+        "description": "Akses hanya untuk admin.",
+        "tags": ["Users"],
+        "requestBody": { "$ref": "#/components/requestBodies/User" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "400": { "$ref": "#/components/responses/Error" },
+          "404": { "$ref": "#/components/responses/Error" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteUser",
+        "summary": "Hapus pengguna",
+        "description": "Akses hanya untuk admin.",
+        "tags": ["Users"],
+        "responses": {
+          "200": { "$ref": "#/components/responses/Success" },
+          "404": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Gunakan token dari response login; Swagger menambahkan prefix Bearer secara otomatis."
+      }
+    },
+    "parameters": {
+      "Id": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "integer", "minimum": 1 }
+      },
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "description": "Nomor halaman yang diminta.",
+        "schema": { "type": "integer", "minimum": 1, "default": 1 }
+      },
+      "PageSize": {
+        "name": "page_size",
+        "in": "query",
+        "required": false,
+        "description": "Jumlah data per halaman (maksimum 100). Respons daftar menyertakan items dan metadata pagination.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 10
+        }
+      },
+      "Search": {
+        "name": "search",
+        "in": "query",
+        "required": false,
+        "description": "Kata kunci pencarian pada atribut yang didukung endpoint.",
+        "schema": { "type": "string" }
+      },
+      "Barcode": {
+        "name": "barcode",
+        "in": "query",
+        "required": false,
+        "description": "Filter berdasarkan sebagian atau seluruh barcode produk.",
+        "schema": { "type": "string" }
+      },
+      "CategoryId": {
+        "name": "category_id",
+        "in": "query",
+        "required": false,
+        "description": "Filter produk berdasarkan ID kategori.",
+        "schema": { "type": "integer", "minimum": 1 }
+      },
+      "SupplierId": {
+        "name": "supplier_id",
+        "in": "query",
+        "required": false,
+        "description": "Filter berdasarkan ID supplier.",
+        "schema": { "type": "integer", "minimum": 1 }
+      },
+      "DateFrom": {
+        "name": "date_from",
+        "in": "query",
+        "required": false,
+        "description": "Tanggal awal filter, format YYYY-MM-DD.",
+        "schema": { "type": "string", "format": "date" }
+      },
+      "DateTo": {
+        "name": "date_to",
+        "in": "query",
+        "required": false,
+        "description": "Tanggal akhir filter, format YYYY-MM-DD.",
+        "schema": { "type": "string", "format": "date" }
+      },
+      "Invoice": {
+        "name": "invoice",
+        "in": "query",
+        "required": false,
+        "description": "Cari nomor invoice (pencocokan sebagian).",
+        "schema": { "type": "string" }
+      },
+      "ProductSearch": {
+        "name": "product",
+        "in": "query",
+        "required": false,
+        "description": "Cari nama produk (pencocokan sebagian).",
+        "schema": { "type": "string" }
+      },
+      "Cashier": {
+        "name": "cashier",
+        "in": "query",
+        "required": false,
+        "description": "Filter nama kasir; hanya digunakan oleh admin dan apoteker.",
+        "schema": { "type": "string" }
+      },
+      "PaymentMethod": {
+        "name": "payment_method",
+        "in": "query",
+        "required": false,
+        "description": "Filter metode pembayaran.",
+        "schema": { "type": "string", "enum": ["cash", "transfer", "qris"] }
+      },
+      "Order": {
+        "name": "order",
+        "in": "query",
+        "required": false,
+        "description": "Urutan jumlah terjual pada analisis produk.",
+        "schema": { "type": "string", "enum": ["ASC", "DESC"], "default": "DESC" }
+      },
+      "InvoiceDate": {
+        "name": "invoice_date",
+        "in": "query",
+        "required": false,
+        "description": "Filter tanggal invoice pembelian, format YYYY-MM-DD.",
+        "schema": { "type": "string", "format": "date" }
+      },
+      "Year": {
+        "name": "year",
+        "in": "query",
+        "required": false,
+        "description": "Tahun laporan; default tahun berjalan. Untuk kasir harus tahun berjalan dan data yang ditampilkan hanya hari ini.",
+        "schema": { "type": "integer", "minimum": 1000 }
+      }
+    },
+    "requestBodies": {
+      "Login": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/LoginInput" },
+            "example": { "email": "user@example.com", "password": "password" }
+          }
+        }
+      },
+      "Product": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ProductInput" },
+            "example": {
+              "barcode": "POSTMAN001",
+              "name": "Produk Uji Postman",
+              "unit": "Tablet",
+              "purchase_price": 100000,
+              "stock": 100,
+              "min_stock": 10,
+              "category_id": 1,
+              "supplier_id": 1,
+              "invoice_number": "INV-POSTMAN-001",
+              "invoice_date": "2026-10-25",
+              "exp_date": "2027-10-25",
+              "sale_units": [
+                { "unit_name": "Strip", "base_quantity": 10 },
+                { "unit_name": "Box", "base_quantity": 100 }
+              ]
+            }
+          }
+        }
+      },
+      "StockIn": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/StockInInput" },
+            "example": {
+              "invoice_number": "INV-POSTMAN-001",
+              "invoice_date": "2026-10-25",
+              "box_quantity": 1,
+              "conversion_factor": 10,
+              "purchase_price": 100000,
+              "exp_date": "2027-10-25"
+            }
+          }
+        }
+      },
+      "ProductBatch": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ProductBatchInput" },
+            "example": {
+              "invoice_number": "INV-POSTMAN-001",
+              "invoice_date": "2026-10-25",
+              "quantity_received": 10,
+              "quantity_remaining": 10,
+              "exp_date": "2027-10-25",
+              "unit_cost": 10000
+            }
+          }
+        }
+      },
+      "Category": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/JsonObject" },
+            "example": {
+              "name": "Kategori Uji Postman",
+              "description": "Kategori untuk pengujian API"
+            }
+          }
+        }
+      },
+      "Expense": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ExpenseInput" },
+            "example": {
+              "category": "Operasional",
+              "description": "Pengeluaran uji Postman",
+              "amount": 25000,
+              "payment_method": "cash",
+              "expense_date": "2026-10-25 10:00:00"
+            }
+          }
+        }
+      },
+      "Sale": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/SaleInput" },
+            "example": {
+              "items": [
+                {
+                  "product_id": 1,
+                  "quantity": 2,
+                  "unit_id": 3,
+                  "discount": 1000
+                },
+                {
+                  "product_id": 2,
+                  "quantity": 1,
+                  "discount": 0
+                }
+              ],
+              "discount": 2000,
+              "paid_amount": 50000,
+              "payment_method": "cash"
+            }
+          }
+        }
+      },
+      "Supplier": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/JsonObject" },
+            "example": {
+              "name": "Supplier Uji Postman",
+              "phone": "081234567890",
+              "email": "supplier.postman@example.com",
+              "address": "Jl. Contoh No. 1"
+            }
+          }
+        }
+      },
+      "User": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/JsonObject" },
+            "example": {
+              "name": "Pengguna Uji Postman",
+              "email": "postman.user@example.com",
+              "password": "TestUser@123",
+              "role_id": 1
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "Success": {
+        "description": "Request berhasil.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Success" }
+          }
+        }
+      },
+      "Error": {
+        "description": "Request gagal atau data tidak valid.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Success": {
+        "type": "object",
+        "required": ["success", "message", "data"],
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "Request berhasil." },
+          "data": { "nullable": true, "description": "Data hasil endpoint." }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["success", "message"],
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "message": { "type": "string" },
+          "errors": {
+            "type": "array",
+            "items": { "type": "object", "additionalProperties": true }
+          }
+        }
+      },
+      "LoginInput": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "format": "password" }
+        }
+      },
+      "ProductInput": {
+        "type": "object",
+        "description": "Body tambah atau ubah produk. purchase_price adalah total modal/faktur yang dipakai backend untuk menghitung harga satuan dan harga jual. Untuk unit Tablet, sale_units harus berisi Strip dan Box; untuk Kapsul atau Strip, harus berisi Box.",
+        "required": [
+          "barcode",
+          "name",
+          "unit",
+          "purchase_price",
+          "stock",
+          "min_stock",
+          "category_id",
+          "supplier_id"
+        ],
+        "properties": {
+          "barcode": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 50,
+            "example": "POSTMAN001"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100,
+            "example": "Produk Uji Postman"
+          },
+          "unit": {
+            "type": "string",
+            "enum": ["Pcs", "Botol", "Strip", "Box", "Tablet", "Kaplet", "Kapsul"],
+            "example": "Tablet"
+          },
+          "purchase_price": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Total modal pembelian/faktur, bukan harga modal per unit."
+          },
+          "stock": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Stok awal dalam unit dasar."
+          },
+          "min_stock": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Batas minimum stok untuk peringatan stok rendah."
+          },
+          "category_id": { "type": "integer", "minimum": 1 },
+          "supplier_id": { "type": "integer", "minimum": 1 },
+          "invoice_number": {
+            "type": "string",
+            "maxLength": 100,
+            "nullable": true
+          },
+          "invoice_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "exp_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "sale_units": {
+            "type": "array",
+            "description": "Satuan tambahan yang dapat dijual beserta konversi ke unit dasar.",
+            "items": {
+              "type": "object",
+              "required": ["unit_name", "base_quantity"],
+              "properties": {
+                "unit_name": { "type": "string", "maxLength": 30 },
+                "base_quantity": { "type": "integer", "minimum": 1 }
+              }
+            }
+          }
+        }
+      },
+      "StockInInput": {
+        "type": "object",
+        "required": [
+          "invoice_number",
+          "invoice_date",
+          "box_quantity",
+          "conversion_factor",
+          "purchase_price",
+          "exp_date"
+        ],
+        "properties": {
+          "invoice_number": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "invoice_date": { "type": "string", "format": "date" },
+          "box_quantity": { "type": "integer", "minimum": 1 },
+          "conversion_factor": { "type": "integer", "minimum": 1 },
+          "purchase_price": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "description": "Total modal faktur untuk batch yang diterima."
+          },
+          "exp_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Tanggal kedaluwarsa batch."
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProductBatchInput": {
+        "type": "object",
+        "description": "Semua field harus dikirim saat memperbarui batch. invoice_number, invoice_date, dan exp_date boleh null.",
+        "required": [
+          "invoice_number",
+          "invoice_date",
+          "quantity_received",
+          "quantity_remaining",
+          "exp_date",
+          "unit_cost"
+        ],
+        "properties": {
+          "invoice_number": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "nullable": true
+          },
+          "invoice_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "quantity_received": { "type": "integer", "minimum": 0 },
+          "quantity_remaining": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Tidak boleh melebihi quantity_received."
+          },
+          "exp_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "unit_cost": { "type": "number", "minimum": 0 }
+        },
+        "additionalProperties": false
+      },
+      "SaleInput": {
+        "type": "object",
+        "description": "Kirim data item dan pembayaran saja. Nomor invoice, kasir, harga, subtotal, total, dan kembalian dihitung/dibuat oleh server.",
+        "required": ["items", "paid_amount", "payment_method"],
+        "properties": {
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Produk yang sama tidak boleh muncul lebih dari sekali.",
+            "items": {
+              "type": "object",
+              "required": ["product_id", "quantity"],
+              "properties": {
+                "product_id": { "type": "integer", "minimum": 1 },
+                "quantity": { "type": "integer", "minimum": 1 },
+                "unit_id": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "nullable": true,
+                  "description": "ID satuan jual produk; kosong/null untuk satuan dasar."
+                },
+                "discount": {
+                  "type": "number",
+                  "minimum": 0,
+                  "default": 0,
+                  "description": "Diskon nominal untuk item ini."
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "discount": {
+            "type": "number",
+            "minimum": 0,
+            "default": 0,
+            "description": "Diskon nominal seluruh transaksi."
+          },
+          "paid_amount": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Jumlah uang yang dibayarkan; harus cukup untuk menutup total."
+          },
+          "payment_method": {
+            "type": "string",
+            "enum": ["cash", "transfer", "qris"]
+          }
+        },
+        "additionalProperties": false
+      },
+      "SaleCreatedResponse": {
+        "type": "object",
+        "required": ["success", "message", "data"],
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "Penjualan berhasil disimpan." },
+          "data": {
+            "type": "object",
+            "description": "Detail transaksi yang baru dibuat.",
+            "properties": {
+              "id": { "type": "integer", "example": 12 },
+              "invoice_number": { "type": "string" },
+              "user_id": { "type": "integer" },
+              "cashier_name": { "type": "string" },
+              "sale_date": { "type": "string", "format": "date-time" },
+              "subtotal": { "type": "number" },
+              "discount": { "type": "number" },
+              "grand_total": { "type": "number" },
+              "paid_amount": { "type": "number" },
+              "change_amount": { "type": "number" },
+              "payment_method": { "type": "string" },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "integer" },
+                    "product_id": { "type": "integer" },
+                    "product_name": { "type": "string" },
+                    "quantity": { "type": "integer" },
+                    "unit": { "type": "string" },
+                    "price": { "type": "number" },
+                    "discount": { "type": "number" },
+                    "subtotal": { "type": "number" },
+                    "fefo_batches": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "batch_id": { "type": "integer" },
+                          "quantity": { "type": "integer" },
+                          "unit_cost": { "type": "number" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ExpenseInput": {
+        "type": "object",
+        "required": ["category", "description", "amount"],
+        "properties": {
+          "category": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "amount": { "type": "number", "minimum": 0 },
+          "payment_method": {
+            "type": "string",
+            "enum": ["cash", "transfer"],
+            "default": "cash"
+          },
+          "expense_date": {
+            "type": "string",
+            "description": "Tanggal YYYY-MM-DD atau YYYY-MM-DD HH:mm:ss."
+          }
+        },
+        "additionalProperties": false
+      },
+      "JsonObject": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Body JSON mengikuti field yang divalidasi oleh endpoint terkait."
+      }
+    }
+  }
+}
