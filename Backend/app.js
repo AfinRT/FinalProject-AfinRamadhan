@@ -1,7 +1,7 @@
-// Inisialisasi aplikasi Express dan rute API untuk Apotek POS (Lingkungan Lokal).
+// SUDAH DISEDIAKAN — menjalankan backend dan menyajikan frontend.
 import express from "express";
 import cors from "cors";
-import swaggerUi from 'swagger-ui-express';
+import swaggerUi from "swagger-ui-express";
 import productRoutes from "./routes/productRoutes.js";
 import productBatchRoutes from "./routes/productBatchRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
@@ -15,18 +15,33 @@ import { HttpError } from "./utils/HttpError.js";
 import { sendError, sendSuccess } from "./utils/apiResponse.js";
 import { logError, logInfo } from "./utils/logger.js";
 import { db } from "./config/connection.js";
-import openapi from './docs/openapi.json' with { type: 'json' };
+import openapi from "./docs/openapi.json" with { type: "json" };
 
 const app = express();
 
-// Konfigurasi CORS untuk komunikasi dengan aplikasi Frontend lokal (Vite).
+// Konfigurasi CORS: izinkan domain frontend dari environment atau izinkan semua origin jika belum diset.
 const allowedOrigins = process.env.CLIENT_URL
   ? process.env.CLIENT_URL.split(",").map((url) => url.trim())
-  : ["http://localhost:5173", "http://127.0.0.1:5173"];
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+  : null;
+
+app.use(
+  cors({
+    origin: allowedOrigins
+      ? (origin, callback) => {
+          if (!origin || allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
+            return callback(null, true);
+          }
+          return callback(new Error("Akses ditolak oleh kebijakan CORS."));
+        }
+      : true,
+    credentials: true,
+  }),
+);
+
+// Mengubah body JSON request menjadi object yang dapat dibaca controller.
 app.use(express.json());
 
-// Memeriksa status kesehatan server dan koneksi database MySQL lokal.
+// Memeriksa status server sekaligus koneksi database.
 app.get("/health", async (req, res) => {
   try {
     await db.execute("SELECT 1");
@@ -40,11 +55,14 @@ app.get("/health", async (req, res) => {
   }
 });
 
-// Dokumentasi Swagger UI interaktif di lingkungan lokal.
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapi, {
-  customSiteTitle: 'Apotek POS API Documentation',
-  swaggerOptions: { validatorUrl: null }
-}));
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(openapi, {
+    customSiteTitle: "Final Project API Documentation",
+    swaggerOptions: { validatorUrl: null },
+  }),
+);
 
 // Menghubungkan setiap kelompok endpoint ke prefix URL masing-masing.
 app.use("/api/auth", authRoutes);
@@ -87,10 +105,13 @@ app.use((error, req, res, next) => {
   sendError(res, 500, "Terjadi kesalahan pada server.");
 });
 
-// Port server lokal (default 3000).
 const port = Number(process.env.PORT || 3000);
 
-// Menjalankan server API Express di lingkungan lokal.
-app.listen(port, () => {
-  logInfo("API server started", { url: `http://localhost:${port}` });
-});
+// Menggunakan port hosting bila tersedia dan menerima koneksi dari luar container.
+if (!process.env.VERCEL) {
+  app.listen(port, "0.0.0.0", () => {
+    logInfo("API server started", { url: `http://localhost:${port}` });
+  });
+}
+
+export default app;
