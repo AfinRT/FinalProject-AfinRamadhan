@@ -1884,7 +1884,7 @@
                   "script": {
                     "type": "text/javascript",
                     "exec": [
-                      "pm.test(\"Status respons adalah 200\", function () {\n    pm.response.to.have.status(200);\n});\n\npm.test(\"Pesan respons menunjukkan sukses\", function () {\n    pm.response.to.have.jsonBody(\"success\", true);\n});\n\npm.test(\"Data utama berhasil ditemukan dan valid\", function () {\n    const jsonData = pm.response.json();\n    pm.expect(jsonData.data).to.be.an('array');\n    pm.expect(jsonData.data.length).to.be.at.least(1);\n});"
+                      "pm.test(\"Status respons adalah 200\", function () {\n    pm.response.to.have.status(200);\n});\n\npm.test(\"Pesan respons menunjukkan sukses\", function () {\n    pm.response.to.have.jsonBody(\"success\", true);\n});\n\npm.test(\"Data utama berhasil ditemukan dan valid\", function () {\n    const jsonData = pm.response.json();\n    pm.expect(jsonData.data).to.be.an('array');\n});"
                     ]
                   }
                 }
@@ -2827,7 +2827,7 @@
                   "script": {
                     "type": "text/javascript",
                     "exec": [
-                      "const dataJson = pm.response.json();\r\n\r\n// 1. Cek status code\r\npm.test(\"Status respons adalah 404\", () => {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\n// 2. Skrip Fleksibel: Cocok untuk semua variasi pesan data/route tidak ditemukan\r\npm.test(\"Pesan respons mencerminkan tidak ditemukan (Not Found)\", () => {\r\n    // Memastikan ada properti pesan atau error di dalam respons\r\n    const pesanRespons = dataJson.message || dataJson.error || dataJson.message;\r\n    pm.expect(pesanRespons).to.exist;\r\n    \r\n    // Menggunakan regex penangkap kata kunci (not found, tidak ditemukan, kosong, dll)\r\n    pm.expect(pesanRespons).to.match(/found|ada|temu|exist|kosong|route/i);\r\n});\r\n"
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 404\", () => {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"Pesan respons mencerminkan tidak ditemukan (Not Found)\", () => {\r\n    const pesanRespons = dataJson.message || dataJson.error || dataJson.message;\r\n    pm.expect(pesanRespons).to.exist;\r\n    \r\n    pm.expect(pesanRespons).to.match(/found|ada|temu|exist|kosong|route/i);\r\n});\r\n"
                     ]
                   }
                 }
@@ -3019,6 +3019,17 @@
             },
             {
               "name": "Delete Batch - 404 Not Found",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 404\", () => {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"Pesan respons mencerminkan tidak ditemukan (Not Found)\", () => {\r\n    const pesanRespons = dataJson.message || dataJson.error || dataJson.message;\r\n    pm.expect(pesanRespons).to.exist;\r\n    \r\n    pm.expect(pesanRespons).to.match(/found|ada|temu|exist|kosong|route/i);\r\n});\r\n"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -3394,6 +3405,17 @@
             },
             {
               "name": "Add Category - 403 Forbidden",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 403\", () => {\r\n    pm.response.to.have.status(403);\r\n});\r\n\r\npm.test(\"Respons gagal dan memiliki pesan error\", () => {\r\n    pm.expect(dataJson.success).to.be.false;\r\n    pm.expect(dataJson.message).to.be.a(\"string\").and.not.empty;\r\n});"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -3579,6 +3601,17 @@
             },
             {
               "name": "Edit Category - 403 Forbidden",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 403\", () => {\r\n    pm.response.to.have.status(403);\r\n});\r\n\r\npm.test(\"Respons gagal dan memiliki pesan error\", () => {\r\n    pm.expect(dataJson.success).to.be.false;\r\n    pm.expect(dataJson.message).to.be.a(\"string\").and.not.empty;\r\n});"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -3616,6 +3649,17 @@
             },
             {
               "name": "Edit Category - 404 Not Found",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 404\", () => {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"Pesan respons mencerminkan tidak ditemukan (Not Found)\", () => {\r\n    const pesanRespons = dataJson.message || dataJson.error || dataJson.message;\r\n    pm.expect(pesanRespons).to.exist;\r\n    \r\n    pm.expect(pesanRespons).to.match(/found|ada|temu|exist|kosong|route/i);\r\n});\r\n"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -3775,6 +3819,17 @@
             },
             {
               "name": "Delete Category - 403 Forbidden",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 403\", () => {\r\n    pm.response.to.have.status(403);\r\n});\r\n\r\npm.test(\"Respons gagal dan memiliki pesan error\", () => {\r\n    pm.expect(dataJson.success).to.be.false;\r\n    pm.expect(dataJson.message).to.be.a(\"string\").and.not.empty;\r\n});"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -3803,6 +3858,17 @@
             },
             {
               "name": "Delete Category - 404 Not Found",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 404\", () => {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"Pesan respons mencerminkan tidak ditemukan (Not Found)\", () => {\r\n    const pesanRespons = dataJson.message || dataJson.error || dataJson.message;\r\n    pm.expect(pesanRespons).to.exist;\r\n    \r\n    pm.expect(pesanRespons).to.match(/found|ada|temu|exist|kosong|route/i);\r\n});\r\n"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -4264,6 +4330,17 @@
             },
             {
               "name": "Add Category - 403 Forbidden",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 403\", () => {\r\n    pm.response.to.have.status(403);\r\n});\r\n\r\npm.test(\"Respons gagal dan memiliki pesan error\", () => {\r\n    pm.expect(dataJson.success).to.be.false;\r\n    pm.expect(dataJson.message).to.be.a(\"string\").and.not.empty;\r\n});"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -4449,6 +4526,17 @@
             },
             {
               "name": "Edit Category - 403 Forbidden",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 403\", () => {\r\n    pm.response.to.have.status(403);\r\n});\r\n\r\npm.test(\"Respons gagal dan memiliki pesan error\", () => {\r\n    pm.expect(dataJson.success).to.be.false;\r\n    pm.expect(dataJson.message).to.be.a(\"string\").and.not.empty;\r\n});"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -4486,6 +4574,17 @@
             },
             {
               "name": "Edit Category - 404 Not Found",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 404\", () => {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"Pesan respons mencerminkan tidak ditemukan (Not Found)\", () => {\r\n    const pesanRespons = dataJson.message || dataJson.error || dataJson.message;\r\n    pm.expect(pesanRespons).to.exist;\r\n    \r\n    pm.expect(pesanRespons).to.match(/found|ada|temu|exist|kosong|route/i);\r\n});\r\n"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -4645,6 +4744,17 @@
             },
             {
               "name": "Delete Category - 403 Forbidden",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 403\", () => {\r\n    pm.response.to.have.status(403);\r\n});\r\n\r\npm.test(\"Respons gagal dan memiliki pesan error\", () => {\r\n    pm.expect(dataJson.success).to.be.false;\r\n    pm.expect(dataJson.message).to.be.a(\"string\").and.not.empty;\r\n});"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -4673,6 +4783,17 @@
             },
             {
               "name": "Delete Category - 404 Not Found",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 404\", () => {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"Pesan respons mencerminkan tidak ditemukan (Not Found)\", () => {\r\n    const pesanRespons = dataJson.message || dataJson.error || dataJson.message;\r\n    pm.expect(pesanRespons).to.exist;\r\n    \r\n    pm.expect(pesanRespons).to.match(/found|ada|temu|exist|kosong|route/i);\r\n});\r\n"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -4941,13 +5062,24 @@
             },
             {
               "name": "Get Product Analysis - 403 Forbidden",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\n\npm.test(\"Status respons adalah 403\", () => {\n    pm.response.to.have.status(403);\n});\n\npm.test(\"Respons gagal dan memiliki pesan error\", () => {\n    pm.expect(dataJson.success).to.be.false;\n    pm.expect(dataJson.message).to.be.a(\"string\").and.not.empty;\n});"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
                   "bearer": [
                     {
                       "key": "token",
-                      "value": "{{token_random}}",
+                      "value": "{{token_kasir}}",
                       "type": "string"
                     }
                   ]
@@ -5075,6 +5207,17 @@
             },
             {
               "name": "Get Sales By ID - 404 Not Found",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 404\", () => {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"Pesan respons mencerminkan tidak ditemukan (Not Found)\", () => {\r\n    const pesanRespons = dataJson.message || dataJson.error || dataJson.message;\r\n    pm.expect(pesanRespons).to.exist;\r\n    \r\n    pm.expect(pesanRespons).to.match(/found|ada|temu|exist|kosong|route/i);\r\n});\r\n"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -5183,6 +5326,17 @@
             },
             {
               "name": "Get Sales Receipt - 404 Not Found",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 404\", () => {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"Pesan respons mencerminkan tidak ditemukan (Not Found)\", () => {\r\n    const pesanRespons = dataJson.message || dataJson.error || dataJson.message;\r\n    pm.expect(pesanRespons).to.exist;\r\n    \r\n    pm.expect(pesanRespons).to.match(/found|ada|temu|exist|kosong|route/i);\r\n});\r\n"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -5223,7 +5377,7 @@
                   "script": {
                     "type": "text/javascript",
                     "exec": [
-                      "const dataJson = pm.response.json();\r\nconst sale = dataJson.data ?? dataJson;\r\n\r\npm.test(\"Status respons adalah 201\", () => {\r\n  pm.response.to.have.status(201);\r\n});\r\n\r\npm.test(\"ID produk berhasil didapatkan dan disimpan\", () => {\r\n  pm.expect(sale.id).to.exist;\r\n  pm.environment.set(\"sale_id\", sale.id);\r\n});\r\n"
+                      "const dataJson = pm.response.json();\nconst sale = dataJson.data ?? dataJson;\n\npm.test(\"Status respons adalah 201\", () => {\n  pm.response.to.have.status(201);\n});\n\npm.test(\"Data Penjualan disimpan\", () => {\n  pm.expect(sale.id).to.exist;\n  pm.environment.set(\"sale_id\", sale.id);\n});\n"
                     ]
                   }
                 }
@@ -5243,7 +5397,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\r\n  \"items\": [\r\n    {\r\n      \"product_id\":8,\r\n      \"quantity\": 10,\r\n      \"unit_id\": 1,\r\n      \"discount\": 1000\r\n    },\r\n    {\r\n      \"product_id\": 12,\r\n      \"quantity\": 1,\r\n      \"discount\": 0\r\n    }\r\n  ],\r\n  \"discount\": 2000,\r\n  \"paid_amount\": 700000,\r\n  \"payment_method\": \"cash\"\r\n}",
+                  "raw": "{\r\n  \"items\": [\r\n    {\r\n      \"product_id\": 8,\r\n      \"quantity\": 1,\r\n      \"unit_id\": 12,\r\n      \"discount\": 1000\r\n    },\r\n    {\r\n      \"product_id\": 12,\r\n      \"quantity\": 1,\r\n      \"unit_id\": 16,\r\n      \"discount\": 0\r\n    }\r\n  ],\r\n  \"discount\": 2000,\r\n  \"paid_amount\": 700000,\r\n  \"payment_method\": \"cash\"\r\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -5358,6 +5512,17 @@
             },
             {
               "name": "Add Sales - 403 Forbidden",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 403\", () => {\r\n    pm.response.to.have.status(403);\r\n});\r\n\r\npm.test(\"Respons gagal dan memiliki pesan error\", () => {\r\n    pm.expect(dataJson.success).to.be.false;\r\n    pm.expect(dataJson.message).to.be.a(\"string\").and.not.empty;\r\n});"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -5516,6 +5681,17 @@
             },
             {
               "name": "Delete sales - 403 Forbidden",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 403\", () => {\r\n    pm.response.to.have.status(403);\r\n});\r\n\r\npm.test(\"Respons gagal dan memiliki pesan error\", () => {\r\n    pm.expect(dataJson.success).to.be.false;\r\n    pm.expect(dataJson.message).to.be.a(\"string\").and.not.empty;\r\n});"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -5544,6 +5720,17 @@
             },
             {
               "name": "Delete sales - 404 Not Found Copy",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 404\", () => {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"Pesan respons mencerminkan tidak ditemukan (Not Found)\", () => {\r\n    const pesanRespons = dataJson.message || dataJson.error || dataJson.message;\r\n    pm.expect(pesanRespons).to.exist;\r\n    \r\n    pm.expect(pesanRespons).to.match(/found|ada|temu|exist|kosong|route/i);\r\n});\r\n"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -6629,6 +6816,17 @@
             },
             {
               "name": "Add Supplier - 403 Forbidden",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 403\", () => {\r\n    pm.response.to.have.status(403);\r\n});\r\n\r\npm.test(\"Respons gagal dan memiliki pesan error\", () => {\r\n    pm.expect(dataJson.success).to.be.false;\r\n    pm.expect(dataJson.message).to.be.a(\"string\").and.not.empty;\r\n});"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -6814,6 +7012,17 @@
             },
             {
               "name": "Edit Supplier - 403 Forbidden",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 403\", () => {\r\n    pm.response.to.have.status(403);\r\n});\r\n\r\npm.test(\"Respons gagal dan memiliki pesan error\", () => {\r\n    pm.expect(dataJson.success).to.be.false;\r\n    pm.expect(dataJson.message).to.be.a(\"string\").and.not.empty;\r\n});"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -6851,6 +7060,17 @@
             },
             {
               "name": "Edit Supplier - 404 Not Found",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 404\", () => {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"Pesan respons mencerminkan tidak ditemukan (Not Found)\", () => {\r\n    const pesanRespons = dataJson.message || dataJson.error || dataJson.message;\r\n    pm.expect(pesanRespons).to.exist;\r\n    \r\n    pm.expect(pesanRespons).to.match(/found|ada|temu|exist|kosong|route/i);\r\n});\r\n"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -7010,6 +7230,17 @@
             },
             {
               "name": "Delete Supplier - 403 Forbidden",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 403\", () => {\r\n    pm.response.to.have.status(403);\r\n});\r\n\r\npm.test(\"Respons gagal dan memiliki pesan error\", () => {\r\n    pm.expect(dataJson.success).to.be.false;\r\n    pm.expect(dataJson.message).to.be.a(\"string\").and.not.empty;\r\n});"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -7038,6 +7269,17 @@
             },
             {
               "name": "Delete Supplier - 404 Not Found",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 404\", () => {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"Pesan respons mencerminkan tidak ditemukan (Not Found)\", () => {\r\n    const pesanRespons = dataJson.message || dataJson.error || dataJson.message;\r\n    pm.expect(pesanRespons).to.exist;\r\n    \r\n    pm.expect(pesanRespons).to.match(/found|ada|temu|exist|kosong|route/i);\r\n});\r\n"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -7820,6 +8062,17 @@
             },
             {
               "name": "Add User - 403 Forbidden",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 403\", () => {\r\n    pm.response.to.have.status(403);\r\n});\r\n\r\npm.test(\"Respons gagal dan memiliki pesan error\", () => {\r\n    pm.expect(dataJson.success).to.be.false;\r\n    pm.expect(dataJson.message).to.be.a(\"string\").and.not.empty;\r\n});"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -8014,6 +8267,17 @@
             },
             {
               "name": "Edit User - 403 Forbidden",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 403\", () => {\r\n    pm.response.to.have.status(403);\r\n});\r\n\r\npm.test(\"Respons gagal dan memiliki pesan error\", () => {\r\n    pm.expect(dataJson.success).to.be.false;\r\n    pm.expect(dataJson.message).to.be.a(\"string\").and.not.empty;\r\n});"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -8051,6 +8315,17 @@
             },
             {
               "name": "Edit User - 404 Not Found",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 404\", () => {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"Pesan respons mencerminkan tidak ditemukan (Not Found)\", () => {\r\n    const pesanRespons = dataJson.message || dataJson.error || dataJson.message;\r\n    pm.expect(pesanRespons).to.exist;\r\n    \r\n    pm.expect(pesanRespons).to.match(/found|ada|temu|exist|kosong|route/i);\r\n});\r\n"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -8210,6 +8485,17 @@
             },
             {
               "name": "Delete User - 403 Forbidden",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 403\", () => {\r\n    pm.response.to.have.status(403);\r\n});\r\n\r\npm.test(\"Respons gagal dan memiliki pesan error\", () => {\r\n    pm.expect(dataJson.success).to.be.false;\r\n    pm.expect(dataJson.message).to.be.a(\"string\").and.not.empty;\r\n});"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
@@ -8238,6 +8524,17 @@
             },
             {
               "name": "Delete User - 404 Not Found",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const dataJson = pm.response.json();\r\n\r\npm.test(\"Status respons adalah 404\", () => {\r\n    pm.response.to.have.status(404);\r\n});\r\n\r\npm.test(\"Pesan respons mencerminkan tidak ditemukan (Not Found)\", () => {\r\n    const pesanRespons = dataJson.message || dataJson.error || dataJson.message;\r\n    pm.expect(pesanRespons).to.exist;\r\n    \r\n    pm.expect(pesanRespons).to.match(/found|ada|temu|exist|kosong|route/i);\r\n});\r\n"
+                    ]
+                  }
+                }
+              ],
               "request": {
                 "auth": {
                   "type": "bearer",
