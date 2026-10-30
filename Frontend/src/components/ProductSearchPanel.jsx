@@ -1,6 +1,6 @@
 // Mencari produk berdasarkan nama atau barcode lalu menampilkan hasil untuk dimasukkan ke keranjang.
 import Button from "./Button.jsx";
-import { AlertTriangle,  PackageSearch, Plus, ShoppingCart } from "lucide-react";
+import { AlertTriangle, PackageSearch, Plus, ShoppingCart } from "lucide-react";
 import FilterField from "./FilterField.jsx";
 import { getExpInfo } from "../utils/kasirProducts.js";
 
@@ -55,9 +55,16 @@ export default function ProductSearchPanel({
           <ul className="divide-y divide-slate-200">
             {products.slice(0, 12).map((product) => {
               const salableStock = Number(product.stock) || 0;
-              const hasCritical = Number(product.criticalBatchCount) > 0;
-              const criticalInfo = getExpInfo(product.criticalExpDate);
               const activeExpInfo = getExpInfo(product.exp_date);
+              const fallbackCriticalDate =
+                product.criticalExpDate ||
+                (activeExpInfo?.isNearExp || activeExpInfo?.isExpired
+                  ? product.exp_date
+                  : null);
+              const hasCritical =
+                Number(product.criticalBatchCount) > 0 ||
+                (salableStock <= 0 && Boolean(fallbackCriticalDate));
+              const criticalInfo = getExpInfo(fallbackCriticalDate);
 
               const isCriticalWithNewBatch = salableStock > 0 && hasCritical;
               const isAllCriticalOrExpired = salableStock <= 0 && hasCritical;
@@ -81,10 +88,13 @@ export default function ProductSearchPanel({
                       {isCriticalWithNewBatch && (
                         <span
                           className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold border border-amber-300 bg-amber-100 text-amber-800"
-                          title={`Terdapat batch lama yang mendekati kedaluwarsa (${criticalInfo?.formattedDate} · ${criticalInfo?.diffDays} hari lagi). Sistem otomatis mengarahkan ke batch baru.`}
+                          title={`Terdapat batch yang ${criticalInfo?.isExpired ? "sudah kedaluwarsa" : "mendekati kedaluwarsa"} (${criticalInfo?.formattedDate}${!criticalInfo?.isExpired && criticalInfo?.diffDays !== undefined ? ` · ${criticalInfo?.diffDays} hari lagi` : ""}). Sistem otomatis mengarahkan ke batch baru.`}
                         >
-                          <AlertTriangle className="size-3 shrink-0" aria-hidden="true" />
-                          Ada Batch Kritis: Exp {criticalInfo?.formattedDate}
+                          <AlertTriangle
+                            className="size-3 shrink-0"
+                            aria-hidden="true"
+                          />
+                          Ada Batch Akan Exp {criticalInfo?.formattedDate}
                         </span>
                       )}
                       {isAllCriticalOrExpired && (
@@ -92,11 +102,15 @@ export default function ProductSearchPanel({
                           className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold border border-red-300 bg-red-100 text-red-700"
                           title="Semua batch obat ini berada dalam masa kritis (<= 30 hari) atau sudah kedaluwarsa, dilarang dijual."
                         >
-                          <AlertTriangle className="size-3 shrink-0" aria-hidden="true" />
-                          Kritis &le; 30 Hari (Dilarang Jual)
+                          <AlertTriangle
+                            className="size-3 shrink-0"
+                            aria-hidden="true"
+                          />
+                          {criticalInfo?.isExpired
+                            ? `Kedaluwarsa: Exp ${criticalInfo?.formattedDate} (Dilarang Jual)`
+                            : `Kritis ≤ 30 Hari: Exp ${criticalInfo?.formattedDate || "-"} (Dilarang Jual)`}
                         </span>
                       )}
-                    
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-y-0.5 text-xs text-slate-500">
                       <span>
@@ -105,19 +119,13 @@ export default function ProductSearchPanel({
                       <span className="mx-1.5" aria-hidden="true">
                         ·
                       </span>
-                      <span className={salableStock < 1 ? "font-medium text-red-600" : ""}>
+                      <span
+                        className={
+                          salableStock < 1 ? "font-medium text-red-600" : ""
+                        }
+                      >
                         Stok layak jual: {salableStock}
                       </span>
-                      {product.exp_date && salableStock > 0 && (
-                        <>
-                          <span className="mx-1.5" aria-hidden="true">
-                            ·
-                          </span>
-                          <span className="text-slate-600 font-medium">
-                            Exp: {activeExpInfo?.formattedDate}
-                          </span>
-                        </>
-                      )}
                     </div>
                   </div>
                   <Button
@@ -127,7 +135,9 @@ export default function ProductSearchPanel({
                     aria-label={`Tambah ${product.name}`}
                     title={
                       salableStock < 1
-                        ? "Obat tidak memiliki stok yang layak jual (> 30 hari)"
+                        ? hasCritical && criticalInfo?.isExpired
+                          ? "Obat sudah kedaluwarsa, dilarang dijual"
+                          : "Obat tidak memiliki stok yang layak jual (> 30 hari)"
                         : `Tambah ${product.name}`
                     }
                     className={`ghost-action-button ${

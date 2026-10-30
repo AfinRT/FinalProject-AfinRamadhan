@@ -28,6 +28,18 @@ function calculateUnitCost(invoiceAmount, baseQuantity) {
 
 // Format objek data produk agar memiliki struktur nilai default yang rapi dan konsisten.
 export function formatProduct(row = {}) {
+  const stock = Math.max(0, Number(row.stock) || 0);
+  const activeBatchCount = Number(row.active_batch_count || 0);
+  const criticalBatchCount = Number(row.critical_batch_count || 0);
+  const salableStock =
+    row.salable_stock !== undefined
+      ? Math.max(0, Number(row.salable_stock) || 0)
+      : activeBatchCount > 0
+        ? stock
+        : criticalBatchCount > 0
+          ? 0
+          : stock;
+
   return {
     id: row.id || null,
     name: row.name || "",
@@ -35,13 +47,18 @@ export function formatProduct(row = {}) {
     unit: row.unit || "",
     purchase_price: row.purchase_price || 0,
     selling_price: row.selling_price || 0,
-    stock: Math.max(0, Number(row.stock) || 0),
+    stock,
+    salable_stock: salableStock,
     min_stock: Math.max(0, Number(row.min_stock) || 0),
     category_id: row.category_id || null,
     supplier_id: row.supplier_id || null,
     invoice_number: row.invoice_number || null,
     invoice_date: row.invoice_date || null,
     exp_date: row.exp_date || null,
+    active_batch_count: activeBatchCount,
+    critical_batch_count: criticalBatchCount,
+    critical_exp_date: row.critical_exp_date || null,
+    has_active_batch: activeBatchCount > 0,
   };
 }
 
@@ -58,7 +75,14 @@ export async function searchProducts(filters = {}) {
     SELECT p.*, c.name AS category_name,
       (SELECT b.invoice_number FROM product_batches b WHERE b.product_id = p.id ORDER BY b.id DESC LIMIT 1) AS invoice_number,
       (SELECT DATE_FORMAT(b.invoice_date, '%Y-%m-%d') FROM product_batches b WHERE b.product_id = p.id ORDER BY b.id DESC LIMIT 1) AS invoice_date,
-      (SELECT MIN(b.exp_date) FROM product_batches b WHERE b.product_id = p.id AND b.quantity_remaining > 0) AS exp_date
+      COALESCE(
+        (SELECT MIN(b.exp_date) FROM product_batches b WHERE b.product_id = p.id AND b.quantity_remaining > 0 AND b.exp_date > DATE_ADD(CURDATE(), INTERVAL 30 DAY)),
+        (SELECT MIN(b.exp_date) FROM product_batches b WHERE b.product_id = p.id AND b.quantity_remaining > 0)
+      ) AS exp_date,
+      (SELECT MIN(b.exp_date) FROM product_batches b WHERE b.product_id = p.id AND b.quantity_remaining > 0 AND b.exp_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)) AS critical_exp_date,
+      (SELECT COUNT(*) FROM product_batches b WHERE b.product_id = p.id AND b.quantity_remaining > 0 AND b.exp_date > DATE_ADD(CURDATE(), INTERVAL 30 DAY)) AS active_batch_count,
+      (SELECT COUNT(*) FROM product_batches b WHERE b.product_id = p.id AND b.quantity_remaining > 0 AND b.exp_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)) AS critical_batch_count,
+      COALESCE((SELECT SUM(b.quantity_remaining) FROM product_batches b WHERE b.product_id = p.id AND b.quantity_remaining > 0 AND b.exp_date > DATE_ADD(CURDATE(), INTERVAL 30 DAY)), 0) AS salable_stock
     FROM products p
     LEFT JOIN categories c ON c.id = p.category_id
     WHERE 1=1
@@ -327,7 +351,14 @@ export async function findProductById(id) {
     SELECT p.*, c.name AS category_name,
       (SELECT b.invoice_number FROM product_batches b WHERE b.product_id = p.id ORDER BY b.id DESC LIMIT 1) AS invoice_number,
       (SELECT DATE_FORMAT(b.invoice_date, '%Y-%m-%d') FROM product_batches b WHERE b.product_id = p.id ORDER BY b.id DESC LIMIT 1) AS invoice_date,
-      (SELECT MIN(b.exp_date) FROM product_batches b WHERE b.product_id = p.id AND b.quantity_remaining > 0) AS exp_date
+      COALESCE(
+        (SELECT MIN(b.exp_date) FROM product_batches b WHERE b.product_id = p.id AND b.quantity_remaining > 0 AND b.exp_date > DATE_ADD(CURDATE(), INTERVAL 30 DAY)),
+        (SELECT MIN(b.exp_date) FROM product_batches b WHERE b.product_id = p.id AND b.quantity_remaining > 0)
+      ) AS exp_date,
+      (SELECT MIN(b.exp_date) FROM product_batches b WHERE b.product_id = p.id AND b.quantity_remaining > 0 AND b.exp_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)) AS critical_exp_date,
+      (SELECT COUNT(*) FROM product_batches b WHERE b.product_id = p.id AND b.quantity_remaining > 0 AND b.exp_date > DATE_ADD(CURDATE(), INTERVAL 30 DAY)) AS active_batch_count,
+      (SELECT COUNT(*) FROM product_batches b WHERE b.product_id = p.id AND b.quantity_remaining > 0 AND b.exp_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)) AS critical_batch_count,
+      COALESCE((SELECT SUM(b.quantity_remaining) FROM product_batches b WHERE b.product_id = p.id AND b.quantity_remaining > 0 AND b.exp_date > DATE_ADD(CURDATE(), INTERVAL 30 DAY)), 0) AS salable_stock
     FROM products p
     LEFT JOIN categories c ON c.id = p.category_id
     WHERE p.id = ?

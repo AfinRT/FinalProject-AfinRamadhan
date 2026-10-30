@@ -118,10 +118,13 @@ export default function useKasir() {
     if (Number(product.criticalBatchCount) > 0 && !existing) {
       const criticalInfo = getExpInfo(product.criticalExpDate);
       const activeExpInfo = getExpInfo(product.exp_date);
+      const statusText = criticalInfo?.isExpired
+        ? `sudah kedaluwarsa (${criticalInfo?.formattedDate})`
+        : `mendekati kedaluwarsa (${criticalInfo?.formattedDate} · sisa ${criticalInfo?.diffDays} hari)`;
       const confirmation = await showAlert({
         icon: "info",
         title: "Perhatian Batch Obat",
-        text: `Terdapat batch obat lama yang mendekati kedaluwarsa (${criticalInfo?.formattedDate} · sisa ${criticalInfo?.diffDays} hari).\n\nSistem mengarahkan penjualan ke Batch Baru (Exp: ${activeExpInfo?.formattedDate}). Pastikan Anda mengambil fisik batch baru di rak etalase.\n\nLanjutkan?`,
+        text: `Terdapat batch obat yang ${statusText}.\n\nSistem mengarahkan penjualan ke Batch Baru (Exp: ${activeExpInfo?.formattedDate || "-"}). Pastikan Anda mengambil fisik batch baru di rak etalase.\n\nLanjutkan?`,
         showCancelButton: true,
         confirmButtonText: "Ya, Lanjutkan",
         cancelButtonText: "Batal",

@@ -97,7 +97,10 @@ export function groupProducts(products) {
     ]);
     const group = groups.get(key);
 
-    const productStock = Number(product.stock) || 0;
+    const productStock =
+      product.salable_stock !== undefined
+        ? Number(product.salable_stock) || 0
+        : Number(product.stock) || 0;
     const batchCount =
       Number(product.active_batch_count) || (productStock > 0 ? 1 : 0);
     const criticalCount = Number(product.critical_batch_count || 0);
@@ -135,7 +138,10 @@ export function groupProducts(products) {
         activeBatchCount: batchCount,
         criticalBatchCount: criticalCount,
         criticalExpDate: product.critical_exp_date || null,
-        exp_date: product.exp_date ?? null,
+        exp_date:
+          productStock > 0 && product.has_active_batch !== false
+            ? product.exp_date ?? null
+            : null,
         hasActiveBatch: product.has_active_batch ?? (productStock > 0),
         variants: [product],
       });
@@ -167,8 +173,12 @@ export function getDefaultUnitKey(productGroup) {
 export function getAvailableQuantity(productGroup, selectedUnitKey) {
   return productGroup.variants.reduce((total, product) => {
     const unit = getProductUnit(product, selectedUnitKey);
+    const stock =
+      product.salable_stock !== undefined
+        ? Number(product.salable_stock) || 0
+        : Number(product.stock) || 0;
     return unit
-      ? total + Math.floor((Number(product.stock) || 0) / unit.base_quantity)
+      ? total + Math.floor(stock / unit.base_quantity)
       : total;
   }, 0);
 }
@@ -180,7 +190,13 @@ export function allocateQuantity(productGroup, quantity, selectedUnitKey) {
 
   // Urutkan varian yang memiliki stok aktif berdasarkan tanggal kedaluwarsa terdekat (FEFO > 30 hari)
   const activeVariants = [...productGroup.variants]
-    .filter((product) => (Number(product.stock) || 0) > 0)
+    .filter((product) => {
+      const stock =
+        product.salable_stock !== undefined
+          ? Number(product.salable_stock) || 0
+          : Number(product.stock) || 0;
+      return stock > 0;
+    })
     .sort((a, b) => {
       if (!a.exp_date) return 1;
       if (!b.exp_date) return -1;
@@ -191,9 +207,11 @@ export function allocateQuantity(productGroup, quantity, selectedUnitKey) {
     if (remaining <= 0) break;
     const unit = getProductUnit(product, selectedUnitKey);
     if (!unit) continue;
-    const available = Math.floor(
-      (Number(product.stock) || 0) / unit.base_quantity,
-    );
+    const stock =
+      product.salable_stock !== undefined
+        ? Number(product.salable_stock) || 0
+        : Number(product.stock) || 0;
+    const available = Math.floor(stock / unit.base_quantity);
     const allocated = Math.min(remaining, available);
     if (allocated > 0) {
       allocations.push({
